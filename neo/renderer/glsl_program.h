@@ -36,4 +36,13 @@ void R_InitGLSLPrograms( void );
 
 extern interactionProgram_t interactionProg;
 
+struct shadowProgram_t {
+	GLuint	program;
+	GLint	loc_modelViewProj;
+	GLint	loc_localLightOrigin;
+	bool	valid;
+};
+
+extern shadowProgram_t shadowProg;
+
 #endif

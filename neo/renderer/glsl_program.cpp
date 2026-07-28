@@ -102,11 +102,60 @@ static bool R_LoadGLSLProgram( const char *vertexPath, const char *fragmentPath,
 	return true;
 }
 
+shadowProgram_t shadowProg;
+
+static bool R_LoadShadowGLSLProgram( const char *vertexPath, const char *fragmentPath, shadowProgram_t &prog ) {
+	idStr vertexSrc, fragmentSrc;
+	if ( !R_ReadTextFile( vertexPath, vertexSrc ) ) return false;
+	if ( !R_ReadTextFile( fragmentPath, fragmentSrc ) ) return false;
+
+	GLuint vs = R_CompileShaderStage( GL_VERTEX_SHADER, vertexSrc.c_str(), vertexPath );
+	if ( !vs ) return false;
+
+	GLuint fs = R_CompileShaderStage( GL_FRAGMENT_SHADER, fragmentSrc.c_str(), fragmentPath );
+	if ( !fs ) { qglDeleteShader( vs ); return false; }
+
+	GLuint program = qglCreateProgram();
+	qglAttachShader( program, vs );
+	qglAttachShader( program, fs );
+
+	// un seul attribut: la position (en vec4, le .w porte le flag extrusion)
+	qglBindAttribLocation( program, 0, "attr_Vertex" );
+
+	qglLinkProgram( program );
+
+	GLint linked = GL_FALSE;
+	qglGetProgramiv( program, GL_LINK_STATUS, &linked );
+	qglDeleteShader( vs );
+	qglDeleteShader( fs );
+	if ( !linked ) {
+		char log[4096];
+		qglGetProgramInfoLog( program, sizeof(log), NULL, log );
+		common->Warning( "GLSL link error (%s + %s):\n%s", vertexPath, fragmentPath, log );
+		qglDeleteProgram( program );
+		return false;
+	}
+
+	prog.program = program;
+	prog.loc_modelViewProj = qglGetUniformLocation( program, "u_modelViewProjectionMatrix" );
+	prog.loc_localLightOrigin = qglGetUniformLocation( program, "u_lightOrigin" );
+	prog.valid = true;
+
+	return true;
+}
+
 void R_InitGLSLPrograms( void ) {
 	memset( &interactionProg, 0, sizeof(interactionProg) );
 	R_LoadGLSLProgram(
 		"glprogs/interaction_dhewm3.vertex.glsl",
 		"glprogs/interaction_dhewm3.pixel.glsl",
 		interactionProg
+	);
+
+	memset( &shadowProg, 0, sizeof(shadowProg) );
+	R_LoadShadowGLSLProgram(
+		"glprogs/shadow_dhewm3.vertex.glsl",
+		"glprogs/shadow_dhewm3.pixel.glsl",
+		shadowProg
 	);
 }
