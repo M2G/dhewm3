@@ -49,6 +49,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #include "stb_image_write.h"
+#include "renderer/glsl_program.h"
 
 // functions that are not called every frame
 
@@ -861,6 +862,14 @@ void R_InitOpenGL( void ) {
 
 	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
 	R_ReloadARBPrograms_f( idCmdArgs() );
+
+	// step 3: charge le shader GLSL en parallele, sans encore l'utiliser pour le rendu
+	R_InitGLSLPrograms();
+	if ( !interactionProg.valid ) {
+		common->Warning( "GLSL interaction program failed to load (harmless for now, ARB2 path still active)" );
+	} else {
+		common->Printf( "GLSL interaction program loaded successfully (program id %u)\n", interactionProg.program );
+	}
 
 	// allocate the vertex array range or vertex objects
 	vertexCache.Init();
