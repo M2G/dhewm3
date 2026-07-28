@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "renderer/VertexCache.h"
 
 #include "renderer/tr_local.h"
+#include "renderer/glsl_program.h"
 
 extern idCVar r_useCarmacksReverse;
 extern idCVar r_useStencilOpSeparate;
@@ -1297,19 +1298,20 @@ static void RB_T_Shadow( const drawSurf_t *surf ) {
 	if ( tr.backEndRendererHasVertexPrograms && r_useShadowVertexProgram.GetBool()
 		&& surf->space != backEnd.currentSpace ) {
 		idVec4 localLight;
-
 		R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.vLight->globalLightOrigin, localLight.ToVec3() );
 		localLight.w = 0.0f;
-		qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, localLight.ToFloatPtr() );
+		qglUniform4fv( shadowProg.loc_localLightOrigin, 1, localLight.ToFloatPtr() );
+
+		// GLSL: matrice MVP calculee dans le meme ordre que le shader interaction (deja confirme fonctionnel)
+		float mvp[16];
+		myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mvp );
+		qglUniformMatrix4fv( shadowProg.loc_modelViewProj, 1, GL_FALSE, mvp );
 	}
-
 	tri = surf->geo;
-
 	if ( !tri->shadowCache ) {
 		return;
 	}
-
-	qglVertexPointer( 4, GL_FLOAT, sizeof( shadowCache_t ), vertexCache.Position(tri->shadowCache) );
+	qglVertexAttribPointer( 0, 4, GL_FLOAT, GL_FALSE, sizeof( shadowCache_t ), vertexCache.Position(tri->shadowCache) );
 
 	// we always draw the sil planes, but we may not need to draw the front or rear caps
 	int	numIndexes;
