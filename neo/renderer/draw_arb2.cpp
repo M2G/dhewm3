@@ -117,6 +117,14 @@ void	RB_ARB2_DrawInteraction( const drawInteraction_t *din ) {
 	GL_SelectTextureNoClient( 4 );
 	din->diffuseImage->Bind();
 
+	// texture 3 will be the light projection texture
+	GL_SelectTextureNoClient( 3 );
+	din->lightImage->Bind();
+
+	// texture 5 is the per-surface specular map
+	GL_SelectTextureNoClient( 5 );
+	din->specularImage->Bind();
+
 	// draw it
 	RB_DrawElementsWithCounters( din->surf->geo );
 }
@@ -173,6 +181,12 @@ void RB_ARB2_CreateDrawInteractions( const drawSurf_t *surf ) {
 
 	// disable features
 	GL_SelectTextureNoClient( 4 );
+	globalImages->BindNull();
+
+	GL_SelectTextureNoClient( 5 );
+	globalImages->BindNull();
+
+	GL_SelectTextureNoClient( 3 );
 	globalImages->BindNull();
 
 	GL_SelectTextureNoClient( 2 );
