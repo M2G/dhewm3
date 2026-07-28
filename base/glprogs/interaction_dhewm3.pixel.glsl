@@ -21,7 +21,7 @@ void main() {
     diffuseTerm *= falloffSample;
 
     vec4 diffuseColor = texture2D(u_diffuseMap, v_texcoord4_diffuse) * u_diffuseModifier;
-    vec3 color = diffuseColor.rgb * diffuseTerm * 3.0;
+    vec3 color = diffuseColor.rgb * diffuseTerm;
 
     gl_FragColor = vec4(min(color, vec3(1.0)), 1.0) * v_color;
 }
