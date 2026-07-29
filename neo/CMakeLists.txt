@@ -210,10 +210,15 @@ if(CMAKE_MAJOR_VERSION LESS 3 OR ( CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_V
 endif()
 
 # libs
-find_package(OpenAL REQUIRED)
-include_directories(${OPENAL_INCLUDE_DIR})
+if (EMSCRIPTEN)
+	# En Emscripten, SDL2/OpenAL sont fournis directement par le compilateur
+	# via -s USE_SDL=2 / -lopenal.js (deja dans les ldflags plus bas), pas de find_package.
+	set(SDLx_LIBRARY "")
+else ()
+	find_package(OpenAL REQUIRED)
+	include_directories(${OPENAL_INCLUDE_DIR})
 
-if (SDL3)
+	if (SDL3)
 	if(SDL2)
 		message(WARNING "You enabled both SDL2 and SDL3. Only one can be used at a time, disabling SDL2")
 		set(SDL2 OFF CACHE BOOL "Use SDL2 (make sure SDL3 is disabled!)" FORCE)
@@ -242,6 +247,7 @@ else()
 	include_directories(${SDL_INCLUDE_DIR})
 	set(SDLx_LIBRARY ${SDL_LIBRARY})
 endif()
+endif () # EMSCRIPTEN
 
 if(REPRODUCIBLE_BUILD)
 	# don't use __DATE__ and __TIME__ macros so builds are reproducible
