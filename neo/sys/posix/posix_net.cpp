@@ -276,6 +276,10 @@ void Sys_InitNetworking(void)
 	struct ifaddrs *ifap, *ifp;
 
 	num_interfaces = 0;
+#ifdef __EMSCRIPTEN__
+	// Networking non supporte sous Emscripten pour l'instant
+	return;
+#endif
 
 	if( getifaddrs( &ifap ) < 0 ) {
 		common->FatalError( "InitNetworking: SIOCGIFCONF error - %s\n", strerror( errno ) );
