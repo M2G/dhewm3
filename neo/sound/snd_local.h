@@ -787,6 +787,7 @@ public:
 	ALsizei					openalSourceCount;
 	openalSource_t			openalSources[256];
 
+#ifndef NOEFX
 	LPALGENEFFECTS			alGenEffects;
 	LPALDELETEEFFECTS		alDeleteEffects;
 	LPALISEFFECT			alIsEffect;
@@ -803,6 +804,7 @@ public:
 	LPALISAUXILIARYEFFECTSLOT		alIsAuxiliaryEffectSlot;
 	LPALAUXILIARYEFFECTSLOTI		alAuxiliaryEffectSloti;
 	LPALAUXILIARYEFFECTSLOTF		alAuxiliaryEffectSlotf;
+#endif
 
 	idEFXFile				EFXDatabase;
 	bool					efxloaded;
@@ -818,7 +820,9 @@ public:
 	static bool				alOutputModeAvailable;    // needs ALC_SOFT_output_mode
 
 	// DG: for CheckDeviceAndRecoverIfNeeded()
+#ifndef NOEFX
 	LPALCRESETDEVICESOFT	alcResetDeviceSOFT; // needs ALC_SOFT_HRTF extension
+#endif
 	int						resetRetryCount;
 	unsigned int			lastCheckTime;
 

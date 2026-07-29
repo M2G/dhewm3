@@ -77,7 +77,13 @@ if (EMSCRIPTEN)
 	set(D3XP OFF CACHE BOOL "" FORCE)  # on se concentre sur le jeu de base d'abord
 	add_compile_options(-DNOMT)   # pas de multithreading (comme d3wasm)
 	add_compile_options(-DNOEFX)  # pas d'OpenAL EFX (comme d3wasm)
-	add_compile_options(-fno-exceptions)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_ZLIB=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_VORBIS=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_OGG=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_LIBJPEG=1")
+	set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -s USE_SDL=2")
+	set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -s USE_ZLIB=1")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif ()
 
@@ -390,7 +396,7 @@ if(D3_COMPILER_IS_GCC_OR_CLANG)
 
 	if(NOT CMAKE_CROSSCOMPILING AND ONATIVE)
 		add_compile_options(-march=native)
-	elseif(NOT APPLE AND cpu STREQUAL "x86")
+	elseif(NOT APPLE AND NOT EMSCRIPTEN AND cpu STREQUAL "x86")
 		add_compile_options(-march=pentium3)
 	endif()
 
@@ -692,6 +698,12 @@ set(src_renderer
 
 	renderer/stblib_impls.c
 )
+
+# Model_ma.cpp (chargeur Maya ASCII) utilise try/throw/catch, incompatible
+# avec -fno-exceptions. Format tres rarement utilise (le jeu utilise .lwo/.ase/.md5mesh).
+if (EMSCRIPTEN)
+	list(REMOVE_ITEM src_renderer "renderer/Model_ma.cpp")
+endif ()
 
 always_optimize_sourcefile(renderer/stblib_impls.c)
 
