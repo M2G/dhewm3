@@ -49,6 +49,7 @@ void idSoundWorldLocal::Init( idRenderWorld *renderWorld ) {
 	listenerArea = 0;
 	listenerAreaName = "Undefined";
 
+#ifndef NOEFX
 	if (idSoundSystemLocal::useEFXReverb) {
 		if (!soundSystemLocal.alIsAuxiliaryEffectSlot(listenerSlot)) {
 			alGetError();
@@ -98,6 +99,7 @@ void idSoundWorldLocal::Init( idRenderWorld *renderWorld ) {
 			soundSystemLocal.alAuxiliaryEffectSlotf(listenerSlot, AL_EFFECTSLOT_GAIN, listenerSlotReverbGain);
 		}
 	}
+#endif
 
 	gameMsec = 0;
 	game44kHz = 0;

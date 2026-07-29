@@ -369,7 +369,9 @@ void idSoundSystemLocal::Init() {
 	graph = NULL;
 
 	// DG: added these for CheckDeviceAndRecoverIfNeeded()
+#ifndef NOEFX
 	alcResetDeviceSOFT = NULL;
+#endif
 	resetRetryCount = 0;
 	lastCheckTime = 0;
 
@@ -428,7 +430,9 @@ void idSoundSystemLocal::Init() {
 			alIsDisconnectAvailable = alcIsExtensionPresent( openalDevice, "ALC_EXT_disconnect" ) != AL_FALSE;
 			if ( alHRTFavailable ) {
 				common->Printf( "OpenAL: found extension for HRTF\n" );
+#ifndef NOEFX
 				alcResetDeviceSOFT = (LPALCRESETDEVICESOFT)alcGetProcAddress( openalDevice, "alcResetDeviceSOFT" );
+#endif
 				if ( alIsDisconnectAvailable ) {
 					common->Printf( "OpenAL: found extensions for resetting disconnected devices\n" );
 				}
@@ -438,7 +442,9 @@ void idSoundSystemLocal::Init() {
 				}
 			} else {
 				alOutputLimiterAvailable = false;
+#ifndef NOEFX
 				alcResetDeviceSOFT = NULL;
+#endif
 			}
 			alOutputModeAvailable = alcIsExtensionPresent( openalDevice, "ALC_SOFT_output_mode" );
 
@@ -472,6 +478,10 @@ void idSoundSystemLocal::Init() {
 		common->Printf( "OpenAL version: %s\n", alGetString(AL_VERSION) );
 
 		// try to obtain EFX extensions
+#ifdef NOEFX
+		common->Printf( "OpenAL: EFX extension not found (build without EFX support)\n" );
+		EFXAvailable = 0;
+#else
 		if (alcIsExtensionPresent(openalDevice, "ALC_EXT_EFX")) {
 			common->Printf( "OpenAL: found EFX extension\n" );
 			EFXAvailable = 1;
@@ -514,6 +524,7 @@ void idSoundSystemLocal::Init() {
 			alAuxiliaryEffectSloti = NULL;
 			alAuxiliaryEffectSlotf = NULL;
 		}
+#endif
 
 		ALuint handle;
 		openalSourceCount = 0;
@@ -666,6 +677,13 @@ idSoundSystemLocal::ResetALDevice
      returns false if that failed, or the necessary OpenAL extension isn't available
 ===============
 */
+#ifdef NOEFX
+bool idSoundSystemLocal::ResetALDevice()
+{
+	common->Warning( "Can't reset OpenAL device, EFX/HRTF support not compiled in this build" );
+	return false;
+}
+#else
 bool idSoundSystemLocal::ResetALDevice()
 {
 	s_alHRTF.ClearModified();
@@ -688,6 +706,7 @@ bool idSoundSystemLocal::ResetALDevice()
 	}
 	return false;
 }
+#endif
 
 
 /*
@@ -701,6 +720,12 @@ idSoundSystemLocal::CheckDeviceAndRecoverIfNeeded
      modified and if they are, resets the device to apply the change
 ===============
 */
+#ifdef NOEFX
+bool idSoundSystemLocal::CheckDeviceAndRecoverIfNeeded()
+{
+	return true; // pas de gestion HRTF/reset dans ce build, on suppose que tout va bien
+}
+#else
 bool idSoundSystemLocal::CheckDeviceAndRecoverIfNeeded()
 {
 	static const int maxRetries = 20;
@@ -751,6 +776,7 @@ bool idSoundSystemLocal::CheckDeviceAndRecoverIfNeeded()
 
 	return resetRetryCount == 0; // if it's 0, state on last check was ok
 }
+#endif
 
 /*
 ===============
