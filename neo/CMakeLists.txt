@@ -65,6 +65,22 @@ option(TRACY		"Build and integrate the Tracy profiler, requires HARDLINK_GAME" O
 
 option(HARDLINK_GAME "Compile gamecode into executable (no game DLLs)" OFF)
 
+# Force les bonnes options pour un build Emscripten (WebAssembly)
+if (EMSCRIPTEN)
+	set(HARDLINK_GAME ON CACHE BOOL "" FORCE)
+	set(SDL2 ON CACHE BOOL "" FORCE)
+	set(SDL3 OFF CACHE BOOL "" FORCE)
+	set(IMGUI OFF CACHE BOOL "" FORCE)
+	set(TRACY OFF CACHE BOOL "" FORCE)
+	set(DEDICATED OFF CACHE BOOL "" FORCE)
+	set(ONATIVE OFF CACHE BOOL "" FORCE)
+	set(D3XP OFF CACHE BOOL "" FORCE)  # on se concentre sur le jeu de base d'abord
+	add_compile_options(-DNOMT)   # pas de multithreading (comme d3wasm)
+	add_compile_options(-DNOEFX)  # pas d'OpenAL EFX (comme d3wasm)
+	add_compile_options(-fno-exceptions)
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif ()
+
 if(NOT MSVC) # GCC/clang or compatible, hopefully
 	option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored compiler warnings/errors (GCC/Clang only; esp. useful with ninja)." OFF)
 	option(ASAN		"Enable GCC/Clang Adress Sanitizer (ASan)" OFF) # TODO: MSVC might also support this, somehow?
@@ -1319,6 +1335,36 @@ if(HARDLINK_GAME)
 endif()# HARDLINK_GAME
 
 if(CORE)
+# Configuration Emscripten (WebAssembly) - flags de link
+if (EMSCRIPTEN)
+	set(ldflags "${ldflags} --pre-js ${CMAKE_SOURCE_DIR}/sys/wasm/pre.js")
+	set(ldflags "${ldflags} --shell-file ${CMAKE_SOURCE_DIR}/sys/wasm/shell.html")
+	set(ldflags "${ldflags} -o ${DHEWM3BINARY}.html")
+	set(ldflags "${ldflags} -s FORCE_FILESYSTEM=1")
+	set(ldflags "${ldflags} -s TOTAL_MEMORY=402653184")
+	set(ldflags "${ldflags} -s ASYNCIFY=1")
+	set(ldflags "${ldflags} -s MINIFY_HTML=0")
+	set(ldflags "${ldflags} -s ENVIRONMENT=web")
+	file(READ ${CMAKE_SOURCE_DIR}/sys/wasm/asyncify.json ASYNCIFY_WHITELIST)
+	set(ldflags "${ldflags} -s 'ASYNCIFY_WHITELIST=${ASYNCIFY_WHITELIST}'")
+	set(ldflags "${ldflags} -s EXIT_RUNTIME=0")
+	set(ldflags "${ldflags} -s ASSERTIONS=0")
+	set(ldflags "${ldflags} -s MALLOC=dlmalloc")
+	set(ldflags "${ldflags} -s USE_SDL=2")
+	set(ldflags "${ldflags} -s USE_ZLIB=1")
+	set(ldflags "${ldflags} -s USE_VORBIS=1")
+	set(ldflags "${ldflags} -s USE_OGG=1")
+	set(ldflags "${ldflags} -s USE_LIBJPEG=1")
+	set(ldflags "${ldflags} -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0")
+	set(ldflags "${ldflags} -lopenal.js")
+	set(ldflags "${ldflags} -lwebgl.js")
+	set(ldflags "${ldflags} -legl.js")
+	set(ldflags "${ldflags} -lfs.js")
+	set(ldflags "${ldflags} -lmemfs.js")
+	set(ldflags "${ldflags} -lidbfs.js")
+	set(ldflags "${ldflags} -lsockfs.js")
+endif ()
+
 	add_executable(${DHEWM3BINARY} WIN32 MACOSX_BUNDLE
 		${src_core}
 		${src_sys_base}
