@@ -31,6 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "sound/snd_local.h"
 
+#ifndef NOEFX
+
 #define mB_to_gain(millibels, property) \
 	_mB_to_gain(millibels,AL_EAXREVERB_MIN_ ## property, AL_EAXREVERB_MAX_ ## property)
 
@@ -303,3 +305,39 @@ bool idEFXFile::LoadFile( const char *filename, bool OSPath ) {
 
 	return true;
 }
+
+
+#else // NOEFX: pas de support EFX (reverb), stubs minimalistes pour que le linker trouve les symboles
+
+idSoundEffect::idSoundEffect() : effect(0) {
+}
+
+idSoundEffect::~idSoundEffect() {
+}
+
+bool idSoundEffect::alloc() {
+	return false;
+}
+
+idEFXFile::idEFXFile( void ) {
+}
+
+idEFXFile::~idEFXFile( void ) {
+}
+
+void idEFXFile::Clear( void ) {
+}
+
+bool idEFXFile::FindEffect( idStr &name, ALuint *effect ) {
+	return false;
+}
+
+bool idEFXFile::ReadEffect( idLexer &src, idSoundEffect *effect ) {
+	return false;
+}
+
+bool idEFXFile::LoadFile( const char *filename, bool OSPath ) {
+	return false;
+}
+
+#endif // NOEFX
