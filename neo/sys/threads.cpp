@@ -266,6 +266,9 @@ Sys_CreateThread
 ==================
 */
 void Sys_CreateThread(xthread_t function, void *parms, xthreadInfo& info, const char *name) {
+#ifdef NOMT
+	return;
+#else
 	Sys_EnterCriticalSection();
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -290,6 +293,7 @@ void Sys_CreateThread(xthread_t function, void *parms, xthreadInfo& info, const 
 		common->DPrintf("WARNING: MAX_THREADS reached\n");
 
 	Sys_LeaveCriticalSection();
+#endif
 }
 
 /*
