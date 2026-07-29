@@ -158,4 +158,5 @@ void R_InitGLSLPrograms( void ) {
 		"glprogs/shadow_dhewm3.pixel.glsl",
 		shadowProg
 	);
+	common->Printf( "shadowProg.valid=%d program=%u loc_mvp=%d loc_light=%d\n", shadowProg.valid, shadowProg.program, shadowProg.loc_modelViewProj, shadowProg.loc_localLightOrigin );
 }
