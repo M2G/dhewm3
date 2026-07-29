@@ -1349,6 +1349,9 @@ endif()# HARDLINK_GAME
 if(CORE)
 # Configuration Emscripten (WebAssembly) - flags de link
 if (EMSCRIPTEN)
+	add_custom_target(package_demo_data ${CMAKE_SOURCE_DIR}/sys/wasm/package_demo_data.sh data/demo)
+	add_custom_target(package_chunked_demo_data ${CMAKE_SOURCE_DIR}/sys/wasm/package_chunked_demo_data.sh data/chunked)
+
 	set(ldflags "${ldflags} --pre-js ${CMAKE_SOURCE_DIR}/sys/wasm/pre.js")
 	set(ldflags "${ldflags} --shell-file ${CMAKE_SOURCE_DIR}/sys/wasm/shell.html")
 	set(ldflags "${ldflags} -o ${DHEWM3BINARY}.html")
