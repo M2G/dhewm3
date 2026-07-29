@@ -193,6 +193,11 @@ bool Sys_GetPath(sysPath_t type, idStr &path) {
 
 	switch(type) {
 	case PATH_BASE:
+#ifdef __EMSCRIPTEN__
+		// chemin monte par pre.js dans le filesystem virtuel du navigateur
+		path = "/usr/local/share/dhewm3";
+		return true;
+#endif
 		if (stat(BUILD_DATADIR, &st) != -1 && S_ISDIR(st.st_mode)) {
 			path = BUILD_DATADIR;
 			return true;
