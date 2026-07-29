@@ -699,12 +699,6 @@ set(src_renderer
 	renderer/stblib_impls.c
 )
 
-# Model_ma.cpp (chargeur Maya ASCII) utilise try/throw/catch, incompatible
-# avec -fno-exceptions. Format tres rarement utilise (le jeu utilise .lwo/.ase/.md5mesh).
-if (EMSCRIPTEN)
-	list(REMOVE_ITEM src_renderer "renderer/Model_ma.cpp")
-endif ()
-
 always_optimize_sourcefile(renderer/stblib_impls.c)
 
 # I'm a bit sloppy with headers and just glob them in..
