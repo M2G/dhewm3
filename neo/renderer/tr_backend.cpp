@@ -548,6 +548,7 @@ const void	RB_SwapBuffers( const void *data ) {
 
 	D3::ImGuiHooks::EndFrame();
 
+#ifndef __EMSCRIPTEN__
 	int fillAlpha = r_fillWindowAlphaChan.GetInteger();
 	if ( fillAlpha == 1 || (fillAlpha == -1 && glConfig.shouldFillWindowAlpha) )
 	{
@@ -613,6 +614,7 @@ const void	RB_SwapBuffers( const void *data ) {
 		if( scissorEnabled )
 			qglEnable( GL_SCISSOR_TEST );
 	}
+#endif
 
 	// force a gl sync if requested
 	if ( r_finish.GetBool() ) {
