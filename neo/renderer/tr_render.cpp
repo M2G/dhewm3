@@ -556,11 +556,12 @@ to actually render the visible surfaces for this view
 void RB_BeginDrawingView (void) {
 
 	const viewDef_t* viewDef = backEnd.viewDef;
-
+#ifndef __EMSCRIPTEN__
 	// set the modelview matrix for the viewer
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadMatrixf( viewDef->projectionMatrix );
 	qglMatrixMode(GL_MODELVIEW);
+#endif
 
 	// set the window clipping
 	qglViewport( tr.viewportOffset[0] + viewDef->viewport.x1,
