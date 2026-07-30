@@ -45,23 +45,40 @@ may touch, including the editor.
 */
 void RB_SetDefaultGLState( void ) {
 	int		i;
-
+#ifdef __EMSCRIPTEN__
+	// Sous WebGL, pas de fixed-function pipeline (client arrays, texgen, shademodel, polygonmode).
+	// On ne garde que les etats reellement supportes et utilises par notre pipeline GLSL.
+	qglClearDepthf( 1.0f );
+	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
+	backEnd.glState.forceGlState = true;
+	qglColorMask( 1, 1, 1, 1 );
+	qglEnable( GL_DEPTH_TEST );
+	qglEnable( GL_BLEND );
+	qglEnable( GL_SCISSOR_TEST );
+	qglEnable( GL_CULL_FACE );
+	qglDisable( GL_STENCIL_TEST );
+	qglDepthMask( GL_TRUE );
+	qglDepthFunc( GL_ALWAYS );
+	qglCullFace( GL_FRONT_AND_BACK );
+	if ( r_useScissor.GetBool() ) {
+		qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	}
+	for ( i = glConfig.maxTextureUnits - 1 ; i >= 0 ; i-- ) {
+		GL_SelectTexture( i );
+	}
+#else
 	qglClearDepth( 1.0f );
 	qglColor4f (1,1,1,1);
-
 	// the vertex array is always enabled
 	qglEnableClientState( GL_VERTEX_ARRAY );
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	qglDisableClientState( GL_COLOR_ARRAY );
-
 	//
 	// make sure our GL state vector is set correctly
 	//
 	memset( &backEnd.glState, 0, sizeof( backEnd.glState ) );
 	backEnd.glState.forceGlState = true;
-
 	qglColorMask( 1, 1, 1, 1 );
-
 	qglEnable( GL_DEPTH_TEST );
 	qglEnable( GL_BLEND );
 	qglEnable( GL_SCISSOR_TEST );
@@ -69,27 +86,21 @@ void RB_SetDefaultGLState( void ) {
 	qglDisable( GL_LIGHTING );
 	qglDisable( GL_LINE_STIPPLE );
 	qglDisable( GL_STENCIL_TEST );
-
 	qglPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 	qglDepthMask( GL_TRUE );
 	qglDepthFunc( GL_ALWAYS );
-
 	qglCullFace( GL_FRONT_AND_BACK );
 	qglShadeModel( GL_SMOOTH );
-
 	if ( r_useScissor.GetBool() ) {
 		qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	}
-
 	for ( i = glConfig.maxTextureUnits - 1 ; i >= 0 ; i-- ) {
 		GL_SelectTexture( i );
-
 		// object linear texgen is our default
 		qglTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		qglTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		qglTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
 		qglTexGenf( GL_Q, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-
 		GL_TexEnv( GL_MODULATE );
 		qglDisable( GL_TEXTURE_2D );
 		if ( glConfig.texture3DAvailable ) {
@@ -99,6 +110,7 @@ void RB_SetDefaultGLState( void ) {
 			qglDisable( GL_TEXTURE_CUBE_MAP_EXT );
 		}
 	}
+#endif
 }
 
 
