@@ -520,6 +520,25 @@ static void R_CheckPortableExtensions( void ) {
 	}
 
 	// ARB_vertex_buffer_object
+#ifdef __EMSCRIPTEN__
+	// VBO sont du coeur de l'API en WebGL/GLES2, pas une extension ARB.
+	// Seules Gen/Bind/BufferData/DeleteBuffers sont reellement utilisees par idVertexCache.
+	glConfig.ARBVertexBufferObjectAvailable = true;
+	qglGenBuffersARB = (PFNGLGENBUFFERSARBPROC)GLimp_ExtensionPointer( "glGenBuffers" );
+	qglBindBufferARB = (PFNGLBINDBUFFERARBPROC)GLimp_ExtensionPointer( "glBindBuffer" );
+	qglDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)GLimp_ExtensionPointer( "glDeleteBuffers" );
+	qglBufferDataARB = (PFNGLBUFFERDATAARBPROC)GLimp_ExtensionPointer( "glBufferData" );
+	qglBufferSubDataARB = (PFNGLBUFFERSUBDATAARBPROC)GLimp_ExtensionPointer( "glBufferSubData" );
+	qglIsBufferARB = (PFNGLISBUFFERARBPROC)GLimp_ExtensionPointer( "glIsBuffer" );
+	// glMapBuffer/glGetBufferSubData/glGetBufferParameteriv/glGetBufferPointerv
+	// n'existent pas en WebGL1/GLES2 core ; jamais appeles dans VertexCache.cpp, laisses a NULL.
+	qglGetBufferSubDataARB = NULL;
+	qglMapBufferARB = NULL;
+	qglUnmapBufferARB = NULL;
+	qglGetBufferParameterivARB = NULL;
+	qglGetBufferPointervARB = NULL;
+#else
+	// ARB_vertex_buffer_object
 	glConfig.ARBVertexBufferObjectAvailable = R_CheckExtension( "GL_ARB_vertex_buffer_object" );
 	if(glConfig.ARBVertexBufferObjectAvailable) {
 		qglBindBufferARB = (PFNGLBINDBUFFERARBPROC)GLimp_ExtensionPointer( "glBindBufferARB");
@@ -534,6 +553,7 @@ static void R_CheckPortableExtensions( void ) {
 		qglGetBufferParameterivARB = (PFNGLGETBUFFERPARAMETERIVARBPROC)GLimp_ExtensionPointer( "glGetBufferParameterivARB");
 		qglGetBufferPointervARB = (PFNGLGETBUFFERPOINTERVARBPROC)GLimp_ExtensionPointer( "glGetBufferPointervARB");
 	}
+#endif
 
 	// ARB_vertex_program
 	glConfig.ARBVertexProgramAvailable = R_CheckExtension( "GL_ARB_vertex_program" );
