@@ -744,6 +744,18 @@ void R_ARB2_Init( void ) {
 
 	common->Printf( "ARB2 renderer: " );
 
+#ifdef __EMSCRIPTEN__
+	// Sous Emscripten on utilise notre propre pipeline GLSL (pas l'ARB assembly reel),
+	// donc on ne depend pas des extensions ARB_vertex_program/ARB_fragment_program.
+	if ( !interactionProg.valid ) {
+		common->Printf( "Not available (GLSL interaction shader failed to load).\n" );
+		return;
+	}
+
+	common->Printf( "Available (GLSL path).\n" );
+
+	glConfig.allowARB2Path = true;
+#else
 	if ( !glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable ) {
 		common->Printf( "Not available.\n" );
 		return;
@@ -752,4 +764,5 @@ void R_ARB2_Init( void ) {
 	common->Printf( "Available.\n" );
 
 	glConfig.allowARB2Path = true;
+#endif
 }

@@ -1,7 +1,7 @@
-#version 120
+#version 100
+precision mediump float;
 
 uniform mat4 u_modelViewProj;
-
 uniform vec4 u_localLightOrigin;
 uniform vec4 u_localViewOrigin;
 uniform vec4 u_lightProjectionS;

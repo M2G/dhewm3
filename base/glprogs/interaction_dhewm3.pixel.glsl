@@ -1,4 +1,5 @@
-#version 120
+#version 100
+precision mediump float;
 
 varying vec3 v_texcoord0_lightDirTS;
 varying vec2 v_texcoord1_bump;
@@ -30,7 +31,6 @@ void main() {
     vec3 diffuseColor = texture2D(u_diffuseMap, v_texcoord4_diffuse).rgb * u_diffuseModifier.rgb;
     vec3 specularColor = 2.0 * texture2D(u_specularMap, v_texcoord5_specular).rgb * u_specularModifier.rgb;
 
-    // formule confirmee par d3wasm (production, GLSL ES 2.0) : pow(NdotH, 12.0)
     float specularFalloff = pow(NdotH, 12.0);
 
     vec3 color = diffuseColor;
