@@ -451,7 +451,9 @@ static void	RB_SetBuffer( const void *data ) {
 
 	backEnd.frameCount = cmd->frameCount;
 
+#ifndef __EMSCRIPTEN__
 	qglDrawBuffer( cmd->buffer );
+#endif
 
 	// clear screen for debugging
 	// automatically enable this with several other debug tools
