@@ -897,21 +897,19 @@ void R_InitOpenGL( void ) {
 	// recheck all the extensions (FIXME: this might be dangerous)
 	R_CheckPortableExtensions();
 
-	// parse our vertex and fragment programs, possibly disably support for
-	// one of the paths if there was an error
-	R_ARB2_Init();
-
-	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
-	R_ReloadARBPrograms_f( idCmdArgs() );
-
-	// step 3: charge le shader GLSL en parallele, sans encore l'utiliser pour le rendu
+	// charge le shader GLSL AVANT R_ARB2_Init(), qui a besoin de interactionProg.valid
+	// pour decider si le pipeline GLSL est utilisable sous Emscripten
 	R_InitGLSLPrograms();
 	if ( !interactionProg.valid ) {
 		common->Warning( "GLSL interaction program failed to load (harmless for now, ARB2 path still active)" );
 	} else {
 		common->Printf( "GLSL interaction program loaded successfully (program id %u)\n", interactionProg.program );
 	}
-
+	// parse our vertex and fragment programs, possibly disably support for
+	// one of the paths if there was an error
+	R_ARB2_Init();
+	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
+	R_ReloadARBPrograms_f( idCmdArgs() );
 	// allocate the vertex array range or vertex objects
 	vertexCache.Init();
 
