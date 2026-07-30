@@ -394,6 +394,17 @@ static void R_CheckPortableExtensions( void ) {
 	glConfig.glVersion = atof( glConfig.version_string );
 
 	// GL_ARB_multitexture
+#ifdef __EMSCRIPTEN__
+	// Sous WebGL, ces fonctionnalites sont integrees au coeur de l'API (pas d'extension ARB a chercher).
+	// Seul qglActiveTextureARB est reellement utilise par notre pipeline GLSL (dans GL_SelectTextureNoClient),
+	// on le charge via le nom core WebGL/GLES2 "glActiveTexture".
+	glConfig.multitextureAvailable = true;
+	qglActiveTextureARB = (void(APIENTRY *)(GLenum))GLimp_ExtensionPointer( "glActiveTexture" );
+	qglClientActiveTextureARB = (void(APIENTRY *)(GLenum))GLimp_ExtensionPointer( "glActiveTexture" );
+	glConfig.maxTextureUnits = 4;
+	glConfig.maxTextureCoords = 4;
+	glConfig.maxTextureImageUnits = 4;
+#else
 	glConfig.multitextureAvailable = R_CheckExtension( "GL_ARB_multitexture" );
 	if ( glConfig.multitextureAvailable ) {
 		qglMultiTexCoord2fARB = (void(APIENTRY *)(GLenum, GLfloat, GLfloat))GLimp_ExtensionPointer( "glMultiTexCoord2fARB" );
@@ -410,15 +421,19 @@ static void R_CheckPortableExtensions( void ) {
 		qglGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, (GLint *)&glConfig.maxTextureCoords );
 		qglGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, (GLint *)&glConfig.maxTextureImageUnits );
 	}
-
+#endif
 	// GL_ARB_texture_env_combine
+#ifdef __EMSCRIPTEN__
+	glConfig.textureEnvCombineAvailable = true;
+	glConfig.cubeMapAvailable = true;
+	glConfig.envDot3Available = true;
+#else
 	glConfig.textureEnvCombineAvailable = R_CheckExtension( "GL_ARB_texture_env_combine" );
-
 	// GL_ARB_texture_cube_map
 	glConfig.cubeMapAvailable = R_CheckExtension( "GL_ARB_texture_cube_map" );
-
 	// GL_ARB_texture_env_dot3
 	glConfig.envDot3Available = R_CheckExtension( "GL_ARB_texture_env_dot3" );
+#endif
 
 	// GL_ARB_texture_env_add
 	glConfig.textureEnvAddAvailable = R_CheckExtension( "GL_ARB_texture_env_add" );
