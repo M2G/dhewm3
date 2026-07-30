@@ -821,11 +821,17 @@ void R_InitOpenGL( void ) {
 	}
 
 // load qgl function pointers
+#ifdef __EMSCRIPTEN__
+#define QGLPROC(name, rettype, args) \
+	q##name = (rettype(APIENTRYP)args)GLimp_ExtensionPointer(#name); \
+	if (!q##name) \
+		common->Warning("OpenGL function not available in this browser (%s), skipping", #name);
+#else
 #define QGLPROC(name, rettype, args) \
 	q##name = (rettype(APIENTRYP)args)GLimp_ExtensionPointer(#name); \
 	if (!q##name) \
 		common->FatalError("Unable to initialize OpenGL (%s)", #name);
-
+#endif
 #include "renderer/qgl_proc.h"
 
 	// input and sound systems need to be tied to the new window

@@ -302,6 +302,9 @@ Sys_DestroyThread
 ==================
 */
 void Sys_DestroyThread(xthreadInfo& info) {
+#ifdef NOMT
+	return;
+#endif
 	assert(info.threadHandle);
 
 	SDL_WaitThread(info.threadHandle, NULL);
