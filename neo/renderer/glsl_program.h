@@ -45,4 +45,15 @@ struct shadowProgram_t {
 
 extern shadowProgram_t shadowProg;
 
+struct diffuseMapProgram_t {
+	GLuint	program;
+	GLint	loc_modelViewProj;
+	GLint	loc_colorModulate;
+	GLint	loc_colorAdd;
+	GLint	loc_glColor;
+	bool	valid;
+};
+
+extern diffuseMapProgram_t diffuseMapProg;
+
 #endif

@@ -144,6 +144,56 @@ static bool R_LoadShadowGLSLProgram( const char *vertexPath, const char *fragmen
 	return true;
 }
 
+diffuseMapProgram_t diffuseMapProg;
+
+static bool R_LoadDiffuseMapGLSLProgram( const char *vertexPath, const char *fragmentPath, diffuseMapProgram_t &prog ) {
+	idStr vertexSrc, fragmentSrc;
+	if ( !R_ReadTextFile( vertexPath, vertexSrc ) ) return false;
+	if ( !R_ReadTextFile( fragmentPath, fragmentSrc ) ) return false;
+
+	GLuint vs = R_CompileShaderStage( GL_VERTEX_SHADER, vertexSrc.c_str(), vertexPath );
+	if ( !vs ) return false;
+
+	GLuint fs = R_CompileShaderStage( GL_FRAGMENT_SHADER, fragmentSrc.c_str(), fragmentPath );
+	if ( !fs ) { qglDeleteShader( vs ); return false; }
+
+	GLuint program = qglCreateProgram();
+	qglAttachShader( program, vs );
+	qglAttachShader( program, fs );
+
+	qglBindAttribLocation( program, 0, "attr_Vertex" );
+	qglBindAttribLocation( program, 1, "attr_Color" );
+	qglBindAttribLocation( program, 8, "attr_TexCoord" );
+
+	qglLinkProgram( program );
+
+	GLint linked = GL_FALSE;
+	qglGetProgramiv( program, GL_LINK_STATUS, &linked );
+	qglDeleteShader( vs );
+	qglDeleteShader( fs );
+	if ( !linked ) {
+		char log[4096];
+		qglGetProgramInfoLog( program, sizeof(log), NULL, log );
+		common->Warning( "GLSL link error (%s + %s):\n%s", vertexPath, fragmentPath, log );
+		qglDeleteProgram( program );
+		return false;
+	}
+
+	prog.program = program;
+	prog.loc_modelViewProj = qglGetUniformLocation( program, "u_modelViewProjectionMatrix" );
+	prog.loc_colorModulate = qglGetUniformLocation( program, "u_colorModulate" );
+	prog.loc_colorAdd      = qglGetUniformLocation( program, "u_colorAdd" );
+	prog.loc_glColor       = qglGetUniformLocation( program, "u_glColor" );
+
+	qglUseProgram( program );
+	GLint loc;
+	if ( (loc = qglGetUniformLocation( program, "u_fragmentMap0" )) >= 0 ) qglUniform1i( loc, 0 );
+	qglUseProgram( 0 );
+
+	prog.valid = true;
+	return true;
+}
+
 void R_InitGLSLPrograms( void ) {
 	memset( &interactionProg, 0, sizeof(interactionProg) );
 	R_LoadGLSLProgram(
@@ -159,4 +209,11 @@ void R_InitGLSLPrograms( void ) {
 		shadowProg
 	);
 	common->Printf( "shadowProg.valid=%d program=%u loc_mvp=%d loc_light=%d\n", shadowProg.valid, shadowProg.program, shadowProg.loc_modelViewProj, shadowProg.loc_localLightOrigin );
+
+	memset( &diffuseMapProg, 0, sizeof(diffuseMapProg) );
+	R_LoadDiffuseMapGLSLProgram(
+		"glprogs/diffusemap_dhewm3.vertex.glsl",
+		"glprogs/diffusemap_dhewm3.pixel.glsl",
+		diffuseMapProg
+	);
 }
