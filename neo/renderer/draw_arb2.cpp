@@ -210,7 +210,9 @@ void RB_ARB2_DrawInteractions( void ) {
 	viewLight_t		*vLight;
 
 	GL_SelectTexture( 0 );
+#ifndef __EMSCRIPTEN__
 	qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 
 	//
 	// for each light, perform adding and shadowing
@@ -283,9 +285,10 @@ void RB_ARB2_DrawInteractions( void ) {
 
 	// disable stencil shadow test
 	qglStencilFunc( GL_ALWAYS, 128, 255 );
-
+#ifndef __EMSCRIPTEN__
 	GL_SelectTexture( 0 );
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 }
 
 //===================================================================================
