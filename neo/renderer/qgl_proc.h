@@ -386,6 +386,7 @@ QGLPROC(glGetProgramInfoLog, void, (GLuint program, GLsizei maxLength, GLsizei* 
 QGLPROC(glUseProgram, void, (GLuint program))
 QGLPROC(glGetUniformLocation, GLint, (GLuint program, const GLchar* name))
 QGLPROC(glUniform1i, void, (GLint location, GLint v0))
+QGLPROC(glUniform1f, void, (GLint location, GLfloat v0))
 QGLPROC(glUniform4fv, void, (GLint location, GLsizei count, const GLfloat* value))
 QGLPROC(glUniformMatrix4fv, void, (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value))
 QGLPROC(glVertexAttribPointer, void, (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer))

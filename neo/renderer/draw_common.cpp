@@ -749,6 +749,82 @@ This is also called for the generated 2D rendering
 ==================
 */
 void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
+#ifdef __EMSCRIPTEN__
+	// Version simplifiee pour Emscripten: seul le cas standard (TG_EXPLICIT) est gere,
+	// avec notre propre shader GLSL. Les autres texgen (cube map, skybox, reflect, glasswarp)
+	// et les "new style stages" (megatexture) sont ignores pour l'instant (pas de crash, juste pas dessines).
+	const idMaterial *shader = surf->material;
+	const srfTriangles_t *tri = surf->geo;
+
+	if ( !shader->HasAmbient() ) return;
+	if ( shader->IsPortalSky() ) return;
+	if ( !tri->numIndexes ) return;
+	if ( !tri->ambientCache ) return;
+	if ( !diffuseMapProg.valid ) return;
+
+	GL_Cull( shader->GetCullType() );
+
+	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
+
+	float mvp[16];
+	myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mvp );
+
+	const float *regs = surf->shaderRegisters;
+
+	for ( int stage = 0; stage < shader->GetNumStages(); stage++ ) {
+		const shaderStage_t *pStage = shader->GetStage(stage);
+
+		if ( regs[ pStage->conditionRegister ] == 0 ) continue;
+		if ( pStage->lighting != SL_AMBIENT ) continue;
+		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE ) ) continue;
+		if ( pStage->newStage ) continue;
+		if ( pStage->texture.texgen != TG_EXPLICIT ) continue;
+
+		float color[4] = {
+			regs[ pStage->color.registers[0] ],
+			regs[ pStage->color.registers[1] ],
+			regs[ pStage->color.registers[2] ],
+			regs[ pStage->color.registers[3] ]
+		};
+
+		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE )
+			&& color[0] <= 0 && color[1] <= 0 && color[2] <= 0 ) continue;
+		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA )
+			&& color[3] <= 0 ) continue;
+
+		qglUseProgram( diffuseMapProg.program );
+		qglEnableVertexAttribArray( 0 );
+		qglEnableVertexAttribArray( 1 );
+		qglEnableVertexAttribArray( 8 );
+
+		qglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
+		qglVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof( idDrawVert ), ac->color );
+		qglVertexAttribPointer( 8, 2, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+
+		qglUniformMatrix4fv( diffuseMapProg.loc_modelViewProj, 1, GL_FALSE, mvp );
+
+		if ( pStage->vertexColor == SVC_IGNORE ) {
+			qglUniform1f( diffuseMapProg.loc_colorModulate, 0.0f );
+			qglUniform1f( diffuseMapProg.loc_colorAdd, 1.0f );
+		} else {
+			qglUniform1f( diffuseMapProg.loc_colorModulate, 1.0f );
+			qglUniform1f( diffuseMapProg.loc_colorAdd, 0.0f );
+		}
+		qglUniform4fv( diffuseMapProg.loc_glColor, 1, color );
+
+		RB_BindVariableStageImage( &pStage->texture, regs );
+
+		GL_State( pStage->drawStateBits );
+
+		RB_DrawElementsWithCounters( tri );
+
+		qglDisableVertexAttribArray( 0 );
+		qglDisableVertexAttribArray( 1 );
+		qglDisableVertexAttribArray( 8 );
+		qglUseProgram( 0 );
+	}
+#else
+
 	int			stage;
 	const idMaterial	*shader;
 	const shaderStage_t *pStage;
@@ -1200,6 +1276,8 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
 	{
 		RB_LeaveDepthHack();
 	}
+
+#endif
 }
 
 /*
