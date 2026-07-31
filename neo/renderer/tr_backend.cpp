@@ -354,6 +354,7 @@ void GL_State( int stateBits ) {
 		qglColorMask( r, g, b, a );
 	}
 
+#ifndef __EMSCRIPTEN__
 	//
 	// fill/line mode
 	//
@@ -391,6 +392,7 @@ void GL_State( int stateBits ) {
 		}
 	}
 
+#endif
 	backEnd.glState.glStateBits = stateBits;
 }
 
