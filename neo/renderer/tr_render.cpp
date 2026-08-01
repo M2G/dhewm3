@@ -241,9 +241,11 @@ void RB_RenderDrawSurfListWithFunction( drawSurf_t **drawSurfs, int numDrawSurfs
 		drawSurf = drawSurfs[i];
 
 		// change the matrix if needed
+#ifndef __EMSCRIPTEN__
 		if ( drawSurf->space != backEnd.currentSpace ) {
 			qglLoadMatrixf( drawSurf->space->modelViewMatrix );
 		}
+#endif
 
 		if ( drawSurf->space->weaponDepthHack ) {
 			RB_EnterWeaponDepthHack();
