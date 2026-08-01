@@ -1318,9 +1318,11 @@ int RB_STD_DrawShaderPasses( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	globalImages->BindNull();
 
 	GL_SelectTexture( 0 );
+#ifndef __EMSCRIPTEN__
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	RB_SetProgramEnvironment( isPostProcess );
+#endif
 
 	// we don't use RB_RenderDrawSurfListWithFunction()
 	// because we want to defer the matrix load because many
@@ -1347,7 +1349,9 @@ int RB_STD_DrawShaderPasses( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	}
 
 	GL_Cull( CT_FRONT_SIDED );
+#ifndef __EMSCRIPTEN__
 	qglColor3f( 1, 1, 1 );
+#endif
 
 	return i;
 }
