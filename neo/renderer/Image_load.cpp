@@ -210,6 +210,11 @@ This may need to scan six cube map images
 */
 GLenum idImage::SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, int width, int height,
 									 textureDepth_t minimumDepth ) const {
+#ifdef __EMSCRIPTEN__
+	// WebGL/GLES2 n'accepte pas les formats internes legacy (GL_RGB5, GL_INTENSITY8, etc.)
+	// ni les formats compresses S3TC/BPTC sans extension dediee. On force RGBA, comme d3wasm.
+	return GL_RGBA;
+#endif
 	int		i, c;
 	const byte	*scan;
 	int		rgbOr, rgbAnd, aOr, aAnd;
