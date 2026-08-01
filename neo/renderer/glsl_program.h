@@ -56,4 +56,14 @@ struct diffuseMapProgram_t {
 
 extern diffuseMapProgram_t diffuseMapProg;
 
+struct zfillProgram_t {
+	GLuint	program;
+	GLint	loc_modelViewProj;
+	GLint	loc_alphaTest;
+	GLint	loc_glColor;
+	bool	valid;
+};
+
+extern zfillProgram_t zfillProg;
+
 #endif
