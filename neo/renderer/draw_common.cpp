@@ -353,6 +353,73 @@ RB_T_FillDepthBuffer
 ==================
 */
 void RB_T_FillDepthBuffer( const drawSurf_t *surf ) {
+#ifdef __EMSCRIPTEN__
+	// Version simplifiee: pas de gestion du clip plane (numClipPlanes), gere MC_OPAQUE et MC_PERFORATED
+	// via notre shader zfill unique (discard pour l'alpha test), MC_TRANSLUCENT est ignore (comme en natif).
+	const idMaterial *shader = surf->material;
+	const srfTriangles_t *tri = surf->geo;
+
+	if ( !shader->IsDrawn() ) return;
+	if ( !tri->numIndexes ) return;
+	if ( shader->Coverage() == MC_TRANSLUCENT ) return;
+	if ( !tri->ambientCache ) return;
+	if ( !zfillProg.valid ) return;
+
+	const float *regs = surf->shaderRegisters;
+
+	int stage;
+	for ( stage = 0; stage < shader->GetNumStages(); stage++ ) {
+		if ( regs[ shader->GetStage(stage)->conditionRegister ] != 0 ) break;
+	}
+	if ( stage == shader->GetNumStages() ) return;
+
+	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
+
+	float mvp[16];
+	myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mvp );
+
+	qglUseProgram( zfillProg.program );
+	qglEnableVertexAttribArray( 0 );
+	qglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
+	qglUniformMatrix4fv( zfillProg.loc_modelViewProj, 1, GL_FALSE, mvp );
+
+	bool drawSolid = ( shader->Coverage() == MC_OPAQUE );
+
+	if ( shader->Coverage() == MC_PERFORATED ) {
+		bool didDraw = false;
+		qglEnableVertexAttribArray( 8 );
+		for ( stage = 0; stage < shader->GetNumStages(); stage++ ) {
+			const shaderStage_t *pStage = shader->GetStage(stage);
+			if ( !pStage->hasAlphaTest ) continue;
+			if ( regs[ pStage->conditionRegister ] == 0 ) continue;
+			didDraw = true;
+			float alpha = regs[ pStage->color.registers[3] ];
+			if ( alpha <= 0 ) continue;
+
+			qglVertexAttribPointer( 8, 2, GL_FLOAT, GL_FALSE, sizeof( idDrawVert ), ac->st.ToFloatPtr() );
+			float white[4] = { alpha, alpha, alpha, alpha };
+			qglUniform4fv( zfillProg.loc_glColor, 1, white );
+			qglUniform1f( zfillProg.loc_alphaTest, regs[ pStage->alphaTestRegister ] );
+			pStage->texture.image->Bind();
+
+			RB_DrawElementsWithCounters( tri );
+		}
+		qglDisableVertexAttribArray( 8 );
+		if ( !didDraw ) drawSolid = true;
+	}
+
+	if ( drawSolid ) {
+		float black[4] = { 0, 0, 0, 1 };
+		qglUniform4fv( zfillProg.loc_glColor, 1, black );
+		qglUniform1f( zfillProg.loc_alphaTest, 1.0f );
+		globalImages->whiteImage->Bind();
+		RB_DrawElementsWithCounters( tri );
+	}
+
+	qglDisableVertexAttribArray( 0 );
+	qglUseProgram( 0 );
+#else
+
 	int			stage;
 	const idMaterial	*shader;
 	const shaderStage_t *pStage;
@@ -513,6 +580,8 @@ void RB_T_FillDepthBuffer( const drawSurf_t *surf ) {
 		GL_State( GLS_DEPTHFUNC_LESS );
 	}
 
+
+#endif
 }
 
 
@@ -527,6 +596,18 @@ to force the alpha test to fail when behind that clip plane
 =====================
 */
 void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
+#ifdef __EMSCRIPTEN__
+	// Version simplifiee: pas de gestion du clip plane pour mirroirs (numClipPlanes)
+	if ( !backEnd.viewDef->viewEntitys ) return;
+
+	qglPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() );
+	GL_State( GLS_DEPTHFUNC_LESS );
+	qglEnable( GL_STENCIL_TEST );
+	qglStencilFunc( GL_ALWAYS, 1, 255 );
+
+	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer );
+#else
+
 	// if we are just doing 2D rendering, no need to fill the depth buffer
 	if ( !backEnd.viewDef->viewEntitys ) {
 		return;
@@ -580,6 +661,8 @@ void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 		GL_SelectTexture( 0 );
 	}
 
+
+#endif
 }
 
 /*
