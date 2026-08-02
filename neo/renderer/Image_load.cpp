@@ -682,7 +682,16 @@ void idImage::GenerateImage( const byte *pic, int width, int height,
 		*/
 		UploadCompressedNormalMap( scaled_width, scaled_height, scaledBuffer, 0 );
 	} else {
+#ifdef __EMSCRIPTEN__
+		while ( qglGetError() != GL_NO_ERROR ) {}
+#endif
 		qglTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
+#ifdef __EMSCRIPTEN__
+		{
+			GLenum err = qglGetError();
+			if ( err != GL_NO_ERROR ) common->Printf( "TEXTURE UPLOAD ERROR (isolee): 0x%x for image %s (w=%d h=%d fmt=0x%x)\n", err, imgName.c_str(), scaled_width, scaled_height, internalFormat );
+		}
+#endif
 	}
 
 	// create and upload the mip map levels, which we do in all cases, even if we don't think they are needed
@@ -1928,7 +1937,9 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 	GetDownsize( imageWidth, imageHeight );
 	GetDownsize( potWidth, potHeight );
 
+#ifndef __EMSCRIPTEN__
 	qglReadBuffer( GL_BACK );
+#endif
 
 	// only resize if the current dimensions can't hold it at all,
 	// otherwise subview renderings could thrash this
@@ -1937,7 +1948,11 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 		uploadWidth = potWidth;
 		uploadHeight = potHeight;
 		if ( potWidth == imageWidth && potHeight == imageHeight ) {
+#ifdef __EMSCRIPTEN__
+			qglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, x, y, imageWidth, imageHeight, 0 );
+#else
 			qglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB8, x, y, imageWidth, imageHeight, 0 );
+#endif
 		} else {
 			byte	*junk;
 			// we need to create a dummy image with power of two dimensions,
@@ -1950,7 +1965,11 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 				junk[i+1] = 255;
 			}
 #endif
+#ifdef __EMSCRIPTEN__
+			qglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, potWidth, potHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, junk );
+#else
 			qglTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, potWidth, potHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, junk );
+#endif
 			Mem_Free( junk );
 
 			qglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth, imageHeight );

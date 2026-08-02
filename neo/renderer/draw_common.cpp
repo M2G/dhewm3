@@ -844,6 +844,11 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
 	if ( !tri->numIndexes ) return;
 	if ( !tri->ambientCache ) return;
 	if ( !diffuseMapProg.valid ) return;
+	static int callCount = 0;
+	if ( callCount < 5 ) {
+		common->Printf( "RB_STD_T_RenderShaderPasses appelee (call #%d) pour surface avec %d stages\n", callCount, shader->GetNumStages() );
+		callCount++;
+	}
 
 	GL_Cull( shader->GetCullType() );
 
