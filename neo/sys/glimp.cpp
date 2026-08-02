@@ -1131,6 +1131,11 @@ GLimp_SwapBuffers
 ===================
 */
 void GLimp_SwapBuffers() {
+#ifdef __EMSCRIPTEN__
+	// Le swap n'est pas necessaire/supporte sous WebGL: l'affichage se met a jour
+	// automatiquement quand le code rend la main au navigateur (fin de frame).
+	return;
+#endif
 	D3P_BeginCPUSample(SDL_GL_SwapWindow);
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_GL_SwapWindow(window);
