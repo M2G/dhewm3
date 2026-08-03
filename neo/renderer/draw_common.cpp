@@ -1657,7 +1657,9 @@ void RB_StencilShadowPass( const drawSurf_t *drawSurfs ) {
 	}
 
 	globalImages->BindNull();
+#ifndef __EMSCRIPTEN__
 	qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 
 	// for visualizing the shadows
 	if ( r_showShadows.GetInteger() ) {
@@ -1696,7 +1698,9 @@ void RB_StencilShadowPass( const drawSurf_t *drawSurfs ) {
 		qglDisable( GL_DEPTH_BOUNDS_TEST_EXT );
 	}
 
+#ifndef __EMSCRIPTEN__
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+#endif
 
 	qglStencilFunc( GL_GEQUAL, 128, 255 );
 	qglStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
