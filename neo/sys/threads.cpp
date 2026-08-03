@@ -85,7 +85,11 @@ Sys_Sleep
 ==============
 */
 void Sys_Sleep(int msec) {
+#ifdef NOMT
+	return;
+#else
 	SDL_Delay(msec);
+#endif
 }
 
 /*
