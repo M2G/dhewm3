@@ -726,7 +726,9 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 	// change the matrix and light projection vectors if needed
 	if ( surf->space != backEnd.currentSpace ) {
 		backEnd.currentSpace = surf->space;
+#ifndef __EMSCRIPTEN__
 		qglLoadMatrixf( surf->space->modelViewMatrix );
+#endif
 	}
 
 	// change the scissor if needed
