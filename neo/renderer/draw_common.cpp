@@ -1887,6 +1887,10 @@ RB_FogPass
 ==================
 */
 static void RB_FogPass( const drawSurf_t *drawSurfs,  const drawSurf_t *drawSurfs2 ) {
+#ifdef __EMSCRIPTEN__
+	// Brouillard volumetrique fixed-function/texgen non porte en GLSL pour l'instant.
+	return;
+#endif
 	const srfTriangles_t*frustumTris;
 	drawSurf_t			ds;
 	const idMaterial	*lightShader;
