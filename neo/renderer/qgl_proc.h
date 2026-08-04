@@ -95,6 +95,7 @@ QGLPROC(glDeleteTextures, void, (GLsizei n, const GLuint *textures))
 QGLPROC(glDepthFunc, void, (GLenum func))
 QGLPROC(glDepthMask, void, (GLboolean flag))
 QGLPROC(glDepthRange, void, (GLclampd zNear, GLclampd zFar))
+QGLPROC(glDepthRangef, void, (GLfloat zNear, GLfloat zFar))
 QGLPROC(glDisable, void, (GLenum cap))
 QGLPROC(glDisableClientState, void, (GLenum array))
 QGLPROC(glDrawArrays, void, (GLenum mode, GLint first, GLsizei count))
@@ -393,3 +394,10 @@ QGLPROC(glVertexAttribPointer, void, (GLuint index, GLint size, GLenum type, GLb
 QGLPROC(glEnableVertexAttribArray, void, (GLuint index))
 QGLPROC(glDisableVertexAttribArray, void, (GLuint index))
 #undef QGLPROC
+
+#ifdef __EMSCRIPTEN__
+// WebGL/GLES2 utilise glDepthRangef (float), pas glDepthRange (double, desktop uniquement).
+// On redirige tous les appels existants vers la variante float sans devoir toucher chaque site d'appel.
+#define qglDepthRange(zNear, zFar) qglDepthRangef( (GLfloat)(zNear), (GLfloat)(zFar) )
+#endif
+

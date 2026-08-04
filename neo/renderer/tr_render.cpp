@@ -176,6 +176,7 @@ RB_EnterWeaponDepthHack
 */
 void RB_EnterWeaponDepthHack() {
 	qglDepthRange( 0, 0.5 );
+#ifndef __EMSCRIPTEN__
 
 	float	matrix[16];
 
@@ -186,6 +187,7 @@ void RB_EnterWeaponDepthHack() {
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadMatrixf( matrix );
 	qglMatrixMode(GL_MODELVIEW);
+#endif
 }
 
 /*
@@ -195,6 +197,7 @@ RB_EnterModelDepthHack
 */
 void RB_EnterModelDepthHack( float depth ) {
 	qglDepthRange( 0.0f, 1.0f );
+#ifndef __EMSCRIPTEN__
 
 	float	matrix[16];
 
@@ -205,6 +208,7 @@ void RB_EnterModelDepthHack( float depth ) {
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadMatrixf( matrix );
 	qglMatrixMode(GL_MODELVIEW);
+#endif
 }
 
 /*
@@ -214,10 +218,12 @@ RB_LeaveDepthHack
 */
 void RB_LeaveDepthHack() {
 	qglDepthRange( 0, 1 );
+#ifndef __EMSCRIPTEN__
 
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadMatrixf( backEnd.viewDef->projectionMatrix );
 	qglMatrixMode(GL_MODELVIEW);
+#endif
 }
 
 /*
