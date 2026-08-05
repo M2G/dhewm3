@@ -227,6 +227,12 @@
     }
   }
 
+  var heartbeatCount = 0;
+  setInterval(function() {
+    heartbeatCount++;
+    document.title = "HEARTBEAT " + heartbeatCount;
+  }, 500);
+
   var Module = {
     arguments: ['+set', 'fs_basepath', '/usr/local/share/dhewm3', '+map', 'game/demo_mars_city1'],
     preRun: [],

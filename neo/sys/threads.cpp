@@ -26,6 +26,9 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 #include "sys/sys_sdl.h"
 
 #if 0 // TODO: was there a reason not to include full SDL.h?
@@ -85,8 +88,11 @@ Sys_Sleep
 ==============
 */
 void Sys_Sleep(int msec) {
-#ifdef NOMT
-	return;
+#ifdef __EMSCRIPTEN__
+	// SDL_Delay plante sous WebGL/Emscripten (trap "unreachable"), mais on a besoin
+	// de reellement ceder la main au navigateur ici (c'est souvent le seul point de
+	// cession dans la boucle de frame). emscripten_sleep fait ca correctement via Asyncify.
+	emscripten_sleep( msec > 0 ? msec : 1 );
 #else
 	SDL_Delay(msec);
 #endif
