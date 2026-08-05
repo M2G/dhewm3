@@ -1040,6 +1040,11 @@ Return NULL if a complete line is not ready.
 ================
 */
 char *Sys_ConsoleInput( void ) {
+#ifdef __EMSCRIPTEN__
+	// Pas de vrai terminal dans un navigateur : getchar() y tomberait sur window.prompt()
+	// (boite de dialogue bloquante) a chaque frame, gelant completement la page.
+	return NULL;
+#endif
 	if ( tty_enabled ) {
 		int	key;
 		bool	hidden = false;
