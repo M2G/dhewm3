@@ -40,6 +40,14 @@ If you have questions concerning this license or the applicable additional terms
 #include "sys/posix/posix_public.h"
 #include "sys/sys_local.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+
+void EmscriptenMainLoop() {
+	common->Frame();
+}
+#endif
+
 #include <locale.h>
 
 
@@ -455,8 +463,14 @@ int main(int argc, char **argv) {
 		common->Init( 0, NULL );
 	}
 
-	while (1) {
-		common->Frame();
-	}
+	#ifdef __EMSCRIPTEN__
+		emscripten_set_main_loop( EmscriptenMainLoop, 0, 1 );
+		// le 3e argument (simulate_infinite_loop=1) empêche le code après cet appel
+		// de s'exécuter tant que la boucle est active, normal et voulu.
+	#else
+		while (1) {
+			common->Frame();
+		}
+	#endif
 	return 0;
 }
